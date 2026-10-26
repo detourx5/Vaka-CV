@@ -8,6 +8,7 @@
     "dev": "vercel dev"
   },
   "dependencies": {
-    "@google/genai": "^1.0.0"
+    "@google/genai": "^1.0.0",
+    "paynow": "^2.2.2"
   }
 }
