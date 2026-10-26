@@ -1,10 +1,11 @@
 
 import { Paynow } from "paynow";
+import { createClient } from "@supabase/supabase-js";
 
-const PACKAGES = {
-  single: { amount: 1.50, cvs: 1, name: "1 CV" },
-  three: { amount: 3.50, cvs: 3, name: "3 CVs" },
-  five: { amount: 5.00, cvs: 5, name: "5 CVs" }
+const packages = {
+  single: { amount: 1.5, cvs: 1, name: "1 CV" },
+  three: { amount: 3.5, cvs: 3, name: "3 CVs" },
+  five: { amount: 5.0, cvs: 5, name: "5 CVs" }
 };
 
 export default async function handler(req, res) {
@@ -13,42 +14,73 @@ export default async function handler(req, res) {
   }
 
   try {
-    const integrationId = process.env.PAYNOW_INTEGRATION_ID;
-    const integrationKey = process.env.PAYNOW_INTEGRATION_KEY;
-
-    if (!integrationId || !integrationKey) {
-      return res.status(500).json({
-        error: "Payment settings are missing"
-      });
-    }
-
     const { packageId } = req.body || {};
-    const selected = PACKAGES[packageId];
+    const selected = packages[packageId];
 
     if (!selected) {
-      return res.status(400).json({
-        error: "Please select a valid CV package"
-      });
+      return res.status(400).json({ error: "Invalid CV package" });
     }
 
-    const paynow = new Paynow(integrationId, integrationKey);
-    const baseUrl = "https://vaka-cv.vercel.app";
+    const paynow = new Paynow(
+      process.env.PAYNOW_INTEGRATION_ID,
+      process.env.PAYNOW_INTEGRATION_KEY
+    );
 
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    const baseUrl = "https://vaka-cv.vercel.app";
     paynow.returnUrl = `${baseUrl}/?payment=return`;
     paynow.resultUrl = `${baseUrl}/api/payment-result`;
 
     const reference =
       `VAKA-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
+    const { error: insertError } = await supabase
+      .from("payments")
+      .insert({
+        reference,
+        package_id: packageId,
+        amount: selected.amount,
+        cv_count: selected.cvs,
+        status: "pending"
+      });
+
+    if (insertError) {
+      console.error("Supabase insert failed:", insertError.message);
+      return res.status(500).json({
+        error: "Could not create payment record"
+      });
+    }
+
     const payment = paynow.createPayment(reference);
     payment.add(selected.name, selected.amount);
 
     const response = await paynow.send(payment);
 
-    if (!response.success || !response.redirectUrl) {
+    if (!response.success || !response.redirectUrl || !response.pollUrl) {
+      await supabase
+        .from("payments")
+        .update({ status: "failed" })
+        .eq("reference", reference);
+
       console.error("Paynow initiation failed:", response.error);
       return res.status(502).json({
-        error: "Unable to start payment. Please try again."
+        error: "Could not start payment. Please try again."
+      });
+    }
+
+    const { error: updateError } = await supabase
+      .from("payments")
+      .update({ poll_url: response.pollUrl })
+      .eq("reference", reference);
+
+    if (updateError) {
+      console.error("Could not save Paynow poll URL:", updateError.message);
+      return res.status(500).json({
+        error: "Could not save payment details. Please contact support before retrying."
       });
     }
 
@@ -59,7 +91,7 @@ export default async function handler(req, res) {
       cvs: selected.cvs
     });
   } catch (error) {
-    console.error("Payment error:", error.message);
+    console.error("Payment setup error:", error.message);
     return res.status(500).json({
       error: "Something went wrong starting your payment."
     });
