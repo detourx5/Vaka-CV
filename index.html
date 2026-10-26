@@ -6,399 +6,615 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Create a professional, job-tailored CV with Vaka-CV. Build your CV. Build your future.">
   <title>Vaka-CV | Build Your Future</title>
+
   <style>
     :root {
-      --primary: #176b53;
-      --primary-dark: #10533f;
-      --ink: #17251f;
-      --muted: #64736b;
-      --line: #dfe8e2;
-      --bg: #f5f8f5;
+      --green: #16734a;
+      --green-dark: #105b3a;
+      --green-light: #eaf5ee;
+      --text: #18251e;
+      --muted: #637168;
+      --border: #dfe7e1;
+      --background: #f7faf8;
       --white: #ffffff;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
-      color: var(--ink);
-      background: var(--bg);
+      background: var(--background);
+      color: var(--text);
       line-height: 1.6;
     }
 
     header {
       background: var(--white);
-      border-bottom: 1px solid var(--line);
+      border-bottom: 1px solid var(--border);
       padding: 18px 6%;
-    }
-
-    .nav {
-      max-width: 1100px;
-      margin: auto;
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
       gap: 16px;
     }
 
-    .logo {
-      color: var(--primary);
+    .brand {
       font-size: 25px;
       font-weight: 800;
+      color: var(--green);
       letter-spacing: -1px;
     }
 
-    .nav-note {
+    .tagline {
       color: var(--muted);
       font-size: 13px;
     }
 
     .hero {
-      padding: 55px 20px 38px;
+      max-width: 850px;
+      margin: 45px auto 28px;
+      padding: 0 20px;
       text-align: center;
-      background: #eaf4ed;
     }
 
     .eyebrow {
-      color: var(--primary);
-      text-transform: uppercase;
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      background: var(--green-light);
+      color: var(--green-dark);
       font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 2px;
+      font-weight: 700;
     }
 
     h1 {
-      font-size: clamp(34px, 6vw, 54px);
-      line-height: 1.1;
-      letter-spacing: -2px;
-      margin: 14px 0;
+      font-size: clamp(32px, 5vw, 52px);
+      line-height: 1.12;
+      letter-spacing: -1.5px;
+      margin: 18px 0 12px;
     }
 
     .hero p {
-      max-width: 600px;
+      color: var(--muted);
+      max-width: 620px;
       margin: 0 auto;
-      color: #53665b;
-      font-size: 17px;
     }
 
-    .container {
+    main {
       max-width: 850px;
-      margin: 35px auto 70px;
-      padding: 0 18px;
+      margin: 0 auto 60px;
+      padding: 0 20px;
     }
 
     .card {
       background: var(--white);
-      border: 1px solid var(--line);
+      border: 1px solid var(--border);
       border-radius: 16px;
-      padding: clamp(20px, 4vw, 36px);
-      box-shadow: 0 10px 35px rgba(23, 60, 40, 0.05);
-      margin-bottom: 22px;
+      padding: 26px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 22px rgba(22, 50, 32, 0.035);
     }
 
-    h2 {
-      font-size: 22px;
+    .card h2 {
       margin: 0 0 5px;
+      font-size: 20px;
     }
 
-    .sub {
+    .card-intro {
+      margin: 0 0 22px;
       color: var(--muted);
       font-size: 14px;
-      margin: 0 0 24px;
     }
 
-    .grid {
+    .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 18px;
     }
 
-    .field { margin-bottom: 18px; }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
 
     label {
-      display: block;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
-      margin-bottom: 7px;
     }
 
     input, textarea {
       width: 100%;
-      padding: 13px 14px;
-      border: 1px solid #cfdcd3;
-      border-radius: 8px;
-      background: #fff;
-      color: var(--ink);
+      padding: 12px 13px;
+      border: 1px solid #cfdad2;
+      border-radius: 9px;
       font: inherit;
-      font-size: 15px;
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
     }
 
     input:focus, textarea:focus {
-      outline: 2px solid #a6d8bd;
-      border-color: var(--primary);
+      outline: 2px solid #b6dfc5;
+      border-color: var(--green);
     }
 
     textarea {
       resize: vertical;
-      min-height: 110px;
+      min-height: 115px;
     }
-
-    .job-text { min-height: 180px; }
 
     .hint {
       color: var(--muted);
       font-size: 12px;
-      margin-top: 6px;
     }
 
-    .button {
-      width: 100%;
-      border: 0;
+    button {
+      border: none;
       border-radius: 9px;
-      background: var(--primary);
-      color: white;
-      font-size: 16px;
+      padding: 12px 18px;
+      font: inherit;
+      font-size: 14px;
       font-weight: 700;
-      padding: 15px 20px;
       cursor: pointer;
+      transition: background 0.15s ease;
     }
 
-    .button:hover { background: var(--primary-dark); }
-    .button:disabled { opacity: .65; cursor: wait; }
+    button:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    .primary {
+      color: white;
+      background: var(--green);
+    }
+
+    .primary:hover:not(:disabled) {
+      background: var(--green-dark);
+    }
 
     .secondary {
-      background: white;
-      color: var(--primary);
-      border: 1px solid var(--primary);
-      margin-top: 12px;
+      color: var(--green-dark);
+      background: var(--green-light);
+      border: 1px solid #cfe4d5;
     }
 
-    .secondary:hover {
-      background: #eef7f0;
-      color: var(--primary-dark);
+    .secondary:hover:not(:disabled) {
+      background: #dcefe2;
+    }
+
+    .form-actions {
+      margin-top: 22px;
+    }
+
+    .form-actions button {
+      width: 100%;
+      padding: 15px;
+      font-size: 15px;
     }
 
     .notice {
-      display: none;
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    #status {
+      margin-top: 18px;
+      padding: 12px 14px;
       border-radius: 9px;
-      padding: 14px;
-      margin-bottom: 18px;
-      background: #eef7f0;
-      color: #24533a;
-      white-space: pre-wrap;
+      display: none;
+      font-size: 14px;
       overflow-wrap: anywhere;
     }
 
-    .notice.error {
-      background: #fff0ed;
-      color: #8b2c20;
+    #status.error {
+      display: block;
+      background: #fff0ee;
+      color: #9b2c20;
     }
 
-    #resultCard { display: none; }
+    #status.success {
+      display: block;
+      background: var(--green-light);
+      color: var(--green-dark);
+    }
+
+    #resultCard {
+      display: none;
+    }
+
+    .result-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 18px 0;
+    }
 
     #cvResult {
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
+      width: 100%;
+      min-height: 450px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      color: #202820;
       font-family: Arial, Helvetica, sans-serif;
       font-size: 14px;
-      line-height: 1.8;
-      padding: 20px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fcfdfc;
-    }
-
-    .privacy {
-      font-size: 12px;
-      text-align: center;
-      color: var(--muted);
-      margin: 18px 0 0;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
 
     footer {
+      padding: 25px 20px;
       text-align: center;
-      padding: 25px 15px;
+      border-top: 1px solid var(--border);
+      background: white;
       color: var(--muted);
       font-size: 13px;
     }
 
     @media (max-width: 600px) {
-      .grid { grid-template-columns: 1fr; gap: 0; }
-      .nav-note { display: none; }
-      .hero { padding-top: 40px; }
+      header {
+        padding: 16px 20px;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .hero {
+        margin-top: 32px;
+      }
+
+      .card {
+        padding: 19px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .full-width {
+        grid-column: auto;
+      }
+
+      .result-toolbar button {
+        flex: 1 1 100%;
+      }
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
     }
   </style>
 </head>
+
 <body>
   <header>
-    <div class="nav">
-      <div class="logo">Vaka-CV</div>
-      <div class="nav-note">Build Your CV. Build Your Future.</div>
-    </div>
+    <div class="brand">Vaka-CV</div>
+    <div class="tagline">Build Your CV. Build Your Future.</div>
   </header>
 
   <section class="hero">
-    <div class="eyebrow">Your career starts here</div>
+    <span class="eyebrow">YOUR NEXT OPPORTUNITY STARTS HERE</span>
     <h1>Make your next application count.</h1>
-    <p>Create a professional CV tailored to the job you want. Enter your details, add the job advert and let AI help you present your experience clearly.</p>
+    <p>
+      Create a professional CV tailored to the job you want.
+      Add your experience, share the job description and let Vaka-CV help
+      you present your strengths clearly.
+    </p>
   </section>
 
-  <main class="container">
+  <main>
     <form id="cvForm">
       <section class="card">
-        <h2>01. Your details</h2>
-        <p class="sub">Tell us about yourself. Fields marked * are required.</p>
+        <h2>01. Personal information</h2>
+        <p class="card-intro">Tell us who you are and how employers can contact you.</p>
 
-        <div class="grid">
+        <div class="form-grid">
           <div class="field">
             <label for="fullName">Full name *</label>
-            <input id="fullName" name="fullName" required maxlength="120" autocomplete="name" placeholder="Your full name">
+            <input id="fullName" name="fullName" autocomplete="name" required maxlength="120" placeholder="Your full name">
           </div>
 
           <div class="field">
             <label for="email">Email address</label>
-            <input id="email" name="email" type="email" maxlength="254" autocomplete="email" placeholder="you@example.com">
+            <input id="email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com">
           </div>
 
           <div class="field">
             <label for="phone">Phone number</label>
-            <input id="phone" name="phone" maxlength="40" autocomplete="tel" placeholder="+263 ...">
+            <input id="phone" name="phone" type="tel" autocomplete="tel" maxlength="40" placeholder="+263 ...">
           </div>
 
           <div class="field">
             <label for="location">Location</label>
-            <input id="location" name="location" maxlength="120" autocomplete="address-level2" placeholder="City, country">
+            <input id="location" name="location" autocomplete="address-level2" maxlength="120" placeholder="City, country">
           </div>
         </div>
       </section>
 
       <section class="card">
         <h2>02. Your career</h2>
-        <p class="sub">Share your background so the CV reflects your actual experience.</p>
+        <p class="card-intro">Add the information that helps employers understand your background.</p>
 
-        <div class="field">
-          <label for="jobTitle">Job title you are applying for *</label>
-          <input id="jobTitle" name="jobTitle" required maxlength="160" placeholder="e.g. Administration Assistant">
-        </div>
+        <div class="form-grid">
+          <div class="field full-width">
+            <label for="jobTitle">Job title you are applying for *</label>
+            <input id="jobTitle" name="jobTitle" required maxlength="160" placeholder="e.g. Administration Assistant">
+          </div>
 
-        <div class="field">
-          <label for="experience">Work experience</label>
-          <textarea id="experience" name="experience" maxlength="10000" placeholder="List your jobs, organisations, dates, responsibilities and achievements. Include volunteering or placements where relevant."></textarea>
-        </div>
+          <div class="field full-width">
+            <label for="experience">Work experience</label>
+            <textarea id="experience" name="experience" maxlength="10000" placeholder="Include your roles, organisations, dates and responsibilities. You can include volunteering or placements."></textarea>
+          </div>
 
-        <div class="field">
-          <label for="education">Education and qualifications</label>
-          <textarea id="education" name="education" maxlength="6000" placeholder="Institutions, qualifications, subjects and dates"></textarea>
-        </div>
+          <div class="field full-width">
+            <label for="education">Education and qualifications</label>
+            <textarea id="education" name="education" maxlength="6000" placeholder="List your qualifications, institutions and dates."></textarea>
+          </div>
 
-        <div class="field">
-          <label for="skills">Skills and certifications</label>
-          <textarea id="skills" name="skills" maxlength="6000" placeholder="Relevant skills, certificates, software and languages"></textarea>
+          <div class="field full-width">
+            <label for="skills">Skills and certifications</label>
+            <textarea id="skills" name="skills" maxlength="6000" placeholder="List your relevant skills, certificates and professional strengths."></textarea>
+          </div>
         </div>
       </section>
 
       <section class="card">
-        <h2>03. The job advert</h2>
-        <p class="sub">Paste the job description so your CV can be tailored to the role.</p>
+        <h2>03. Target job</h2>
+        <p class="card-intro">Use the actual vacancy description so your CV can be tailored to the role.</p>
 
         <div class="field">
-          <label for="jobDescription">Job description *</label>
-          <textarea class="job-text" id="jobDescription" name="jobDescription" required maxlength="12000" placeholder="Paste the job advert and requirements here..."></textarea>
-          <div class="hint">Maximum 12,000 characters. Do not include passwords, ID numbers or other sensitive personal information.</div>
+          <label for="jobDescription">Paste the job description *</label>
+          <textarea id="jobDescription" name="jobDescription" required maxlength="12000" style="min-height:190px" placeholder="Paste the job advert and its responsibilities and requirements here."></textarea>
+          <span class="hint">Do not include passwords, identity numbers or other unnecessary sensitive information.</span>
         </div>
 
-        <div id="notice" class="notice" role="status" aria-live="polite"></div>
+        <div class="form-actions">
+          <button id="generateBtn" class="primary" type="submit">Generate My CV</button>
+          <p class="notice">Review your CV carefully before sending it to an employer.</p>
+        </div>
 
-        <button id="generateButton" class="button" type="submit">Generate My CV</button>
-        <p class="privacy">Your information is sent to the CV-generation service to process your request. Avoid entering sensitive personal information.</p>
+        <div id="status" role="status" aria-live="polite"></div>
       </section>
     </form>
 
-    <section id="resultCard" class="card">
+    <section class="card" id="resultCard">
       <h2>Your tailored CV</h2>
-      <p class="sub">Review your CV carefully before sending it to an employer.</p>
-      <div id="cvResult"></div>
-      <button id="copyButton" class="button secondary" type="button">Copy CV</button>
-      <button id="downloadButton" class="button secondary" type="button">Download as text file</button>
+      <p class="card-intro">Review your details, make any necessary corrections and download your CV.</p>
+
+      <div class="result-toolbar">
+        <button type="button" class="secondary" id="copyBtn">Copy CV</button>
+        <button type="button" class="primary" id="pdfBtn">Download PDF</button>
+        <button type="button" class="secondary" id="textBtn">Download TXT</button>
+      </div>
+
+      <textarea id="cvResult" aria-label="Generated CV" spellcheck="true"></textarea>
+      <p class="hint">Your CV is editable here. Check all names, dates, contact details and qualifications before using it.</p>
     </section>
   </main>
 
   <footer>
-    Vaka-CV · Build Your CV. Build Your Future.
+    <strong>Vaka-CV</strong> — Build Your CV. Build Your Future.
   </footer>
+
+  <!-- PDF generation library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
 
   <script>
     const form = document.getElementById("cvForm");
-    const notice = document.getElementById("notice");
-    const button = document.getElementById("generateButton");
+    const generateBtn = document.getElementById("generateBtn");
+    const statusBox = document.getElementById("status");
     const resultCard = document.getElementById("resultCard");
     const cvResult = document.getElementById("cvResult");
 
-    form.addEventListener("submit", async function(event) {
+    function showStatus(message, type) {
+      statusBox.textContent = message;
+      statusBox.className = type;
+    }
+
+    form.addEventListener("submit", async function (event) {
       event.preventDefault();
 
-      notice.className = "notice";
-      notice.style.display = "block";
-      notice.textContent = "Creating your tailored CV. Please wait...";
-      button.disabled = true;
-      button.textContent = "Generating your CV...";
+      generateBtn.disabled = true;
+      generateBtn.textContent = "Generating your CV...";
+      statusBox.className = "";
+      statusBox.style.display = "none";
       resultCard.style.display = "none";
 
-      const data = Object.fromEntries(new FormData(form).entries());
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
 
       try {
         const response = await fetch("/api/generate", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify(data)
         });
 
-        const result = await response.json();
+        const result = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          throw new Error(result.error || "CV generation failed.");
+          throw new Error(result.error || "CV generation failed. Please try again.");
         }
 
-        if (!result.cv) {
-          throw new Error("The service returned an empty CV. Please try again.");
+        if (typeof result.cv !== "string" || !result.cv.trim()) {
+          throw new Error("The CV generator returned an empty result. Please try again.");
         }
 
-        cvResult.textContent = result.cv;
+        cvResult.value = result.cv.trim();
         resultCard.style.display = "block";
-        notice.textContent = "Your CV has been generated. Review it below.";
-        resultCard.scrollIntoView({ behavior: "smooth", block: "start" });
+        showStatus("Your CV has been generated successfully. Review it below.", "success");
+
+        resultCard.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
       } catch (error) {
-        notice.className = "notice error";
-        notice.textContent = error.message || "Something went wrong. Please try again.";
+        showStatus(
+          error.message || "Something went wrong. Please try again.",
+          "error"
+        );
       } finally {
-        button.disabled = false;
-        button.textContent = "Generate My CV";
+        generateBtn.disabled = false;
+        generateBtn.textContent = "Generate My CV";
       }
     });
 
-    document.getElementById("copyButton").addEventListener("click", async function() {
+    document.getElementById("copyBtn").addEventListener("click", async function () {
       try {
-        await navigator.clipboard.writeText(cvResult.textContent);
-        this.textContent = "Copied!";
-        setTimeout(() => this.textContent = "Copy CV", 1800);
-      } catch {
-        notice.className = "notice error";
-        notice.style.display = "block";
-        notice.textContent = "Copy was blocked by your browser. Select the CV text and copy it manually.";
+        await navigator.clipboard.writeText(cvResult.value);
+        showStatus("CV copied to your clipboard.", "success");
+      } catch (error) {
+        cvResult.focus();
+        cvResult.select();
+
+        try {
+          const copied = document.execCommand("copy");
+          showStatus(
+            copied ? "CV copied to your clipboard." : "Select the CV text and copy it manually.",
+            copied ? "success" : "error"
+          );
+        } catch {
+          showStatus("Select the CV text and copy it manually.", "error");
+        }
       }
     });
 
-    document.getElementById("downloadButton").addEventListener("click", function() {
-      const blob = new Blob([cvResult.textContent], {
+    function safeFileName(name) {
+      const cleaned = (name || "Vaka-CV")
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9_-]+/g, "_")
+        .replace(/^_+|_+$/g, "")
+        .slice(0, 60);
+
+      return cleaned || "Vaka-CV";
+    }
+
+    document.getElementById("textBtn").addEventListener("click", function () {
+      const name = safeFileName(document.getElementById("fullName").value);
+      const blob = new Blob([cvResult.value], {
         type: "text/plain;charset=utf-8"
       });
+
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
+
       link.href = url;
-      link.download = "Vaka-CV.txt";
+      link.download = name + "_CV.txt";
+      document.body.appendChild(link);
       link.click();
-      URL.revokeObjectURL(url);
+      link.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+
+    document.getElementById("pdfBtn").addEventListener("click", function () {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        showStatus(
+          "The PDF library could not load. Check your internet connection and try again.",
+          "error"
+        );
+        return;
+      }
+
+      const name = safeFileName(document.getElementById("fullName").value);
+      const lines = cvResult.value.replace(/\r\n/g, "\n").split("\n");
+      const pdf = new window.jspdf.jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 18;
+      const maxWidth = pageWidth - margin * 2;
+      const bottomMargin = 18;
+      let y = 20;
+
+      pdf.setProperties({
+        title: name.replace(/_/g, " ") + " - CV",
+        subject: "Professional CV created with Vaka-CV",
+        creator: "Vaka-CV"
+      });
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      pdf.setTextColor(35, 45, 39);
+
+      for (const originalLine of lines) {
+        const line = originalLine.trim();
+
+        if (!line) {
+          y += 3;
+          if (y > pageHeight - bottomMargin) {
+            pdf.addPage();
+            y = 20;
+          }
+          continue;
+        }
+
+        const isHeading =
+          line.length < 65 &&
+          (
+            /^[A-Z][A-Z\s/&-]+$/.test(line) ||
+            /^(professional summary|profile|work experience|professional experience|education|qualifications|skills|certifications|references|career objective|key achievements)$/i.test(line)
+          );
+
+        if (isHeading) {
+          y += 2;
+
+          if (y > pageHeight - bottomMargin - 10) {
+            pdf.addPage();
+            y = 20;
+          }
+
+          pdf.setFont("helvetica", "bold");
+          pdf.setFontSize(11);
+          pdf.setTextColor(22, 115, 74);
+        } else {
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(10);
+          pdf.setTextColor(35, 45, 39);
+        }
+
+        const wrappedLines = pdf.splitTextToSize(line, maxWidth);
+        const lineHeight = isHeading ? 6 : 5;
+
+        for (const wrappedLine of wrappedLines) {
+          if (y > pageHeight - bottomMargin) {
+            pdf.addPage();
+            y = 20;
+          }
+
+          pdf.text(wrappedLine, margin, y);
+          y += lineHeight;
+        }
+
+        if (isHeading) {
+          y += 1;
+        }
+      }
+
+      pdf.save(name + "_CV.pdf");
+      showStatus("Your PDF CV has been downloaded.", "success");
     });
   </script>
 </body>
