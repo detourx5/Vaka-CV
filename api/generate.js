@@ -124,7 +124,7 @@ Create the strongest accurate CV possible using the information supplied.
 
     // Use the model confirmed in the user's model list.
     const result = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.8-flash",
       contents: prompt
     });
 
