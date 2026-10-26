@@ -11,10 +11,20 @@ export default async function handler(req, res) {
     const body = req.body || {};
     const reference = body.reference;
     const pollUrl = body.pollurl || body.pollUrl;
-    const receivedAmount = Number(body.amount);
+    const receivedHash = body.hash;
 
-    if (!reference || !pollUrl || !Number.isFinite(receivedAmount)) {
-      return res.status(400).send("Invalid payment notification");
+    if (!reference || !pollUrl || !receivedHash) {
+      return res.status(400).send("Missing payment details");
+    }
+
+    const paynow = new Paynow(
+      process.env.PAYNOW_INTEGRATION_ID,
+      process.env.PAYNOW_INTEGRATION_KEY
+    );
+
+    // Verify that the notification was signed using your Paynow key.
+    if (!paynow.verifyHash(body)) {
+      return res.status(400).send("Invalid payment hash");
     }
 
     const supabase = createClient(
@@ -32,20 +42,17 @@ export default async function handler(req, res) {
       return res.status(404).send("Payment not found");
     }
 
-    if (Math.abs(receivedAmount - Number(record.amount)) > 0.001) {
+    // Do not accept a notification with a different amount.
+    if (Number(body.amount) !== Number(record.amount)) {
       return res.status(400).send("Payment amount mismatch");
     }
 
-    const paynow = new Paynow(
-      process.env.PAYNOW_INTEGRATION_ID,
-      process.env.PAYNOW_INTEGRATION_KEY
-    );
-
+    // Ask Paynow directly for the current transaction status.
     const status = await paynow.pollTransaction(record.poll_url || pollUrl);
 
     if (
       status.paid() &&
-      Math.abs(Number(status.amount) - Number(record.amount)) <= 0.001
+      Number(status.amount) === Number(record.amount)
     ) {
       const { error: updateError } = await supabase
         .from("payments")
@@ -57,16 +64,16 @@ export default async function handler(req, res) {
         .eq("status", "pending");
 
       if (updateError) {
-        console.error("Payment update failed:", updateError.message);
+        console.error("Database update failed:", updateError.message);
         return res.status(500).send("Could not update payment");
       }
 
       return res.status(200).send("Payment verified");
     }
 
-    return res.status(200).send("Payment not yet confirmed");
+    return res.status(200).send("Payment not confirmed");
   } catch (error) {
-    console.error("Payment verification failed:", error.message);
+    console.error("Payment verification error:", error.message);
     return res.status(500).send("Verification failed");
   }
 }
