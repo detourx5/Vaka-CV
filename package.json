@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.0.0",
-    "paynow": "^2.2.2"
+    "paynow": "^2.2.2",
+    "@supabase/supabase-js": "^2.0.0"
   }
 }
