@@ -1,0 +1,297 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Create a professional CV tailored to your next job with Vaka CV.">
+  <title>Vaka CV | Build Your Future</title>
+  <style>
+    :root {
+      --navy: #10243a;
+      --blue: #2457d6;
+      --light: #f4f7fb;
+      --muted: #627086;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--light);
+      color: var(--navy);
+      line-height: 1.6;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 7%;
+      background: white;
+      border-bottom: 1px solid #e5eaf1;
+    }
+
+    .logo { font-size: 25px; font-weight: 800; }
+    .logo span { color: var(--blue); }
+
+    .nav-link {
+      color: var(--navy);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .hero {
+      padding: 75px 7% 60px;
+      text-align: center;
+      background: linear-gradient(135deg, #edf3ff, #ffffff);
+    }
+
+    .tag {
+      display: inline-block;
+      background: #dfe9ff;
+      color: var(--blue);
+      border-radius: 30px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    h1 {
+      max-width: 800px;
+      margin: 20px auto;
+      font-size: clamp(38px, 6vw, 62px);
+      line-height: 1.1;
+      letter-spacing: -2px;
+    }
+
+    h1 span { color: var(--blue); }
+
+    .hero p {
+      max-width: 620px;
+      margin: 0 auto 28px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .button {
+      display: inline-block;
+      background: var(--blue);
+      color: white;
+      border: 0;
+      padding: 15px 25px;
+      border-radius: 9px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .button:hover { background: #1945b2; }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      max-width: 1050px;
+      padding: 0 20px;
+      margin: -5px auto 55px;
+    }
+
+    .feature {
+      padding: 22px;
+      background: white;
+      border: 1px solid #e5eaf1;
+      border-radius: 14px;
+    }
+
+    .feature h3 { margin: 8px 0; }
+    .feature p { color: var(--muted); margin-bottom: 0; font-size: 14px; }
+    .feature-icon { font-size: 27px; }
+
+    .builder {
+      max-width: 850px;
+      margin: 0 auto 70px;
+      padding: 0 20px;
+    }
+
+    .builder-heading { text-align: center; margin-bottom: 28px; }
+    .builder-heading p { color: var(--muted); }
+
+    form {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      border: 1px solid #e5eaf1;
+      box-shadow: 0 10px 35px #10243a0a;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .field { margin-bottom: 18px; }
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 7px;
+      font-size: 14px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #d4dce7;
+      border-radius: 8px;
+      font: inherit;
+      color: var(--navy);
+      background: white;
+    }
+
+    textarea { min-height: 125px; resize: vertical; }
+    input:focus, textarea:focus, select:focus {
+      outline: 2px solid #b6c9ff;
+      border-color: var(--blue);
+    }
+
+    .help { color: var(--muted); font-size: 13px; margin-top: 5px; }
+    .submit-button { width: 100%; margin-top: 5px; }
+
+    #notice {
+      display: none;
+      padding: 14px;
+      margin-top: 18px;
+      border-radius: 8px;
+      background: #fff4d8;
+      color: #704d00;
+    }
+
+    footer {
+      text-align: center;
+      padding: 28px 20px;
+      color: var(--muted);
+      background: white;
+      border-top: 1px solid #e5eaf1;
+      font-size: 14px;
+    }
+
+    @media (max-width: 650px) {
+      header { padding: 17px 5%; }
+      .hero { padding: 55px 6%; }
+      .features { grid-template-columns: 1fr; margin-top: 25px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .field.full { grid-column: auto; }
+      form { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">Vaka<span>CV</span></div>
+    <a class="nav-link" href="#builder">Create your CV →</a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <span class="tag">YOUR CAREER. YOUR NEXT CHAPTER.</span>
+      <h1>Build a CV that gets you <span>noticed.</span></h1>
+      <p>Create a professional CV tailored to the job you want. Simple, affordable and designed to help you take your next career step.</p>
+      <a class="button" href="#builder">Build My CV</a>
+      <p style="font-size:13px;margin-top:16px;">Your skills deserve to be seen.</p>
+    </section>
+
+    <section class="features" aria-label="Benefits">
+      <article class="feature">
+        <div class="feature-icon">✦</div>
+        <h3>Made for your job</h3>
+        <p>Use the job description to help tailor your CV to the opportunity.</p>
+      </article>
+      <article class="feature">
+        <div class="feature-icon">▤</div>
+        <h3>Professional format</h3>
+        <p>Present your experience, education and skills clearly.</p>
+      </article>
+      <article class="feature">
+        <div class="feature-icon">◎</div>
+        <h3>Simple and affordable</h3>
+        <p>Our goal is to make CV creation accessible to more job seekers.</p>
+      </article>
+    </section>
+
+    <section class="builder" id="builder">
+      <div class="builder-heading">
+        <span class="tag">LET'S GET STARTED</span>
+        <h2>Create your CV</h2>
+        <p>Enter your details and the job you want to apply for.</p>
+      </div>
+
+      <form id="cvForm">
+        <div class="form-grid">
+          <div class="field">
+            <label for="fullName">Full name *</label>
+            <input id="fullName" name="fullName" required placeholder="Your full name">
+          </div>
+          <div class="field">
+            <label for="email">Email address *</label>
+            <input id="email" name="email" type="email" required placeholder="you@example.com">
+          </div>
+          <div class="field">
+            <label for="phone">Phone number</label>
+            <input id="phone" name="phone" placeholder="+263...">
+          </div>
+          <div class="field">
+            <label for="location">City / Country</label>
+            <input id="location" name="location" placeholder="e.g. Harare, Zimbabwe">
+          </div>
+          <div class="field full">
+            <label for="jobTitle">Job title you are applying for *</label>
+            <input id="jobTitle" name="jobTitle" required placeholder="e.g. Administration Assistant">
+          </div>
+          <div class="field full">
+            <label for="experience">Work experience</label>
+            <textarea id="experience" name="experience" placeholder="Your previous jobs, responsibilities and achievements"></textarea>
+          </div>
+          <div class="field full">
+            <label for="education">Education and qualifications</label>
+            <textarea id="education" name="education" placeholder="Schools, qualifications and graduation years"></textarea>
+          </div>
+          <div class="field full">
+            <label for="skills">Skills and strengths</label>
+            <textarea id="skills" name="skills" placeholder="List your skills, training and relevant strengths"></textarea>
+          </div>
+          <div class="field full">
+            <label for="jobDescription">Paste the job description *</label>
+            <textarea id="jobDescription" name="jobDescription" required placeholder="Paste the vacancy or job advert here..."></textarea>
+            <div class="help">This helps the CV generation service understand what the employer is looking for.</div>
+          </div>
+        </div>
+        <button class="button submit-button" type="submit">Continue to Build My CV →</button>
+        <div id="notice" role="status"></div>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <strong>Vaka CV</strong> — Build Your CV. Build Your Future.
+    <br>© <span id="year"></span> Vaka CV. All rights reserved.
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    document.getElementById("cvForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      const notice = document.getElementById("notice");
+      notice.style.display = "block";
+      notice.textContent = "Your form is ready, but CV generation and payment have not been connected yet. We will set these up next. No payment has been taken and your details have not been sent to a server.";
+      notice.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  </script>
+</body>
+</html>
