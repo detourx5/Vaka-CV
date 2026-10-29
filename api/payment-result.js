@@ -10,12 +10,16 @@ export default async function handler(req, res) {
 
   try {
     const body = req.body || {};
+
     const reference =
-      typeof body.reference === "string" ? body.reference.trim() : "";
-    const pollUrl = body.pollurl || body.pollUrl;
+      typeof body.reference === "string"
+        ? body.reference.trim()
+        : "";
+
     const receivedHash = body.hash;
 
-    if (!reference || !pollUrl || !receivedHash) {
+    if (!reference || !receivedHash) {
+      console.error("Paynow callback missing reference or hash.");
       return res.status(400).send("Missing payment details");
     }
 
@@ -36,7 +40,9 @@ export default async function handler(req, res) {
       process.env.PAYNOW_INTEGRATION_KEY
     );
 
+    // Verify that the notification genuinely came from Paynow.
     if (!paynow.verifyHash(body)) {
+      console.error("Paynow callback hash verification failed.");
       return res.status(400).send("Invalid payment hash");
     }
 
@@ -45,22 +51,22 @@ export default async function handler(req, res) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    const { data: record, error } = await supabase
+    const { data: record, error: lookupError } = await supabase
       .from("payments")
       .select("reference, amount, status, poll_url")
       .eq("reference", reference)
       .maybeSingle();
 
-    if (error) {
-      console.error("Payment lookup failed:", error.message);
+    if (lookupError) {
+      console.error("Payment lookup failed:", lookupError.message);
       return res.status(500).send("Could not check payment");
     }
 
     if (!record) {
+      console.error("Payment reference not found:", reference);
       return res.status(404).send("Payment not found");
     }
 
-    // Never allow a callback to change an already-final payment.
     if (record.status === "paid") {
       return res.status(200).send("Payment already verified");
     }
@@ -69,30 +75,58 @@ export default async function handler(req, res) {
       return res.status(200).send("Payment is not pending");
     }
 
+    const callbackAmount = Number(body.amount);
+
     if (
-      !Number.isFinite(Number(body.amount)) ||
-      Math.abs(Number(body.amount) - Number(record.amount)) > 0.001
+      !Number.isFinite(callbackAmount) ||
+      Math.abs(callbackAmount - Number(record.amount)) > 0.001
     ) {
+      console.error("Payment callback amount mismatch.");
       return res.status(400).send("Payment amount mismatch");
     }
 
-    // Use the poll URL saved during checkout rather than trusting
-    // a URL supplied by the callback.
     if (!record.poll_url) {
-      return res.status(400).send("Saved payment polling URL is missing");
+      console.error("Saved Paynow polling URL is missing.");
+      return res.status(500).send("Payment polling URL is missing");
     }
 
-    const status = await paynow.pollTransaction(record.poll_url);
+    // Confirm the transaction directly with Paynow.
+    const pollResult = await paynow.pollTransaction(record.poll_url);
 
-    if (
-      !status.paid() ||
-      !Number.isFinite(Number(status.amount)) ||
-      Math.abs(Number(status.amount) - Number(record.amount)) > 0.001
-    ) {
+    // The Node.js SDK exposes status as a property, not paid().
+    const transactionStatus = String(
+      pollResult?.status || ""
+    ).trim().toLowerCase();
+
+    const confirmedStatuses = [
+      "paid",
+      "awaiting delivery",
+      "delivered"
+    ];
+
+    const pollAmount = Number(pollResult?.amount);
+
+    console.log("Paynow verification result:", {
+      reference,
+      transactionStatus,
+      amountMatches:
+        Number.isFinite(pollAmount) &&
+        Math.abs(pollAmount - Number(record.amount)) <= 0.001
+    });
+
+    if (!confirmedStatuses.includes(transactionStatus)) {
       return res.status(200).send("Payment not confirmed");
     }
 
-    // Conditional update makes duplicate callbacks harmless.
+    if (
+      !Number.isFinite(pollAmount) ||
+      Math.abs(pollAmount - Number(record.amount)) > 0.001
+    ) {
+      console.error("Polled payment amount mismatch.");
+      return res.status(400).send("Payment amount mismatch");
+    }
+
+    // Only mark the record paid after verification.
     const { data: updated, error: updateError } = await supabase
       .from("payments")
       .update({
@@ -111,6 +145,8 @@ export default async function handler(req, res) {
     if (!updated || updated.length === 0) {
       return res.status(200).send("Payment already processed");
     }
+
+    console.log("Payment successfully verified:", reference);
 
     return res.status(200).send("Payment verified");
   } catch (error) {
