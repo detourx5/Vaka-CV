@@ -58,7 +58,7 @@
     }
 
     main {
-      max-width: 900px;
+      max-width: 1100px;
       margin: 42px auto;
       padding: 0 18px;
     }
@@ -105,7 +105,7 @@
 
     .packages {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 14px;
       margin: 20px 0;
     }
@@ -118,11 +118,10 @@
       cursor: pointer;
       background: #fff;
       transition: border-color .2s, background .2s;
+      min-width: 0;
     }
 
-    .package:hover {
-      border-color: var(--primary);
-    }
+    .package:hover { border-color: var(--primary); }
 
     .package:has(input:checked) {
       border: 2px solid var(--primary);
@@ -163,7 +162,6 @@
     }
 
     .field { margin-bottom: 18px; }
-
     .field.full { grid-column: 1 / -1; }
 
     label {
@@ -297,7 +295,14 @@
       font-size: 13px;
     }
 
-    footer span { color: var(--primary); font-weight: 700; }
+    footer span {
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    @media (max-width: 900px) {
+      .packages { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
 
     @media (max-width: 620px) {
       .form-grid, .packages { grid-template-columns: 1fr; }
@@ -328,9 +333,7 @@
 
     <section class="card" id="purchaseSection">
       <h2>Choose your package</h2>
-      <p class="card-intro">
-        Choose the package that works for you.
-      </p>
+      <p class="card-intro">Choose the package that works for you.</p>
 
       <div class="packages">
         <label class="package">
@@ -338,6 +341,13 @@
           <span class="package-name">Starter · 1 CV</span>
           <span class="price">$1.20</span>
           <span class="package-note">One tailored CV</span>
+        </label>
+
+        <label class="package">
+          <input type="radio" name="packageId" value="two">
+          <span class="package-name">Basic · 2 CVs</span>
+          <span class="price">$2.00</span>
+          <span class="package-note">For a couple of applications</span>
         </label>
 
         <label class="package">
@@ -559,7 +569,7 @@
 
           if (response.ok && result.status === "paid") {
             showStatus(
-              "Payment confirmed. CV credits must be enabled by the payment backend before paid CV generation is available.",
+              "Payment confirmed. CV credit access is not yet connected. Please do not make another payment.",
               "success"
             );
             break;
@@ -575,7 +585,6 @@
             );
             break;
           }
-
         } catch (error) {
           console.error("Payment status check failed:", error);
         }
@@ -594,6 +603,8 @@
     }
 
     // Generate a CV through the existing Gemini API.
+    // IMPORTANT: Payment-credit authorization still needs to be implemented
+    // securely on the server before accepting real customers.
     form.addEventListener("submit", async function (event) {
       event.preventDefault();
 
