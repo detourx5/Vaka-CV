@@ -11,13 +11,14 @@
     * { box-sizing: border-box; }
 
     :root {
-      --primary: #176b50;
-      --primary-dark: #10513d;
-      --background: #f4f7f5;
-      --text: #1c2923;
-      --muted: #64716a;
-      --border: #dce5df;
+      --primary: #1769d2;
+      --primary-dark: #0f4fa8;
+      --background: #f3f7fc;
+      --text: #17263b;
+      --muted: #607086;
+      --border: #d9e3f0;
       --white: #ffffff;
+      --light-blue: #edf5ff;
     }
 
     body {
@@ -45,9 +46,10 @@
 
     .brand {
       color: var(--primary);
-      font-size: 25px;
+      font-size: 26px;
       font-weight: 800;
       text-decoration: none;
+      letter-spacing: -0.7px;
     }
 
     .tagline {
@@ -70,7 +72,10 @@
       font-size: clamp(30px, 5vw, 46px);
       line-height: 1.15;
       margin: 0 0 14px;
+      letter-spacing: -1px;
     }
+
+    .hero h1 span { color: var(--primary); }
 
     .hero p {
       color: var(--muted);
@@ -84,12 +89,11 @@
       border: 1px solid var(--border);
       border-radius: 18px;
       margin-bottom: 24px;
-      box-shadow: 0 8px 30px rgba(24, 48, 35, 0.04);
+      box-shadow: 0 8px 30px rgba(23, 65, 120, 0.06);
     }
 
     .card h2 {
-      margin-top: 0;
-      margin-bottom: 6px;
+      margin: 0 0 6px;
       font-size: 23px;
     }
 
@@ -97,6 +101,59 @@
       margin-top: 0;
       color: var(--muted);
       font-size: 14px;
+    }
+
+    .packages {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin: 20px 0;
+    }
+
+    .package {
+      display: block;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 18px;
+      cursor: pointer;
+      background: #fff;
+      transition: border-color .2s, background .2s;
+    }
+
+    .package:hover {
+      border-color: var(--primary);
+    }
+
+    .package:has(input:checked) {
+      border: 2px solid var(--primary);
+      background: var(--light-blue);
+      padding: 17px;
+    }
+
+    .package input {
+      width: auto;
+      display: inline-block;
+      margin-right: 6px;
+      accent-color: var(--primary);
+    }
+
+    .package-name {
+      display: block;
+      font-weight: 700;
+      margin: 6px 0;
+    }
+
+    .price {
+      display: block;
+      color: var(--primary);
+      font-size: 27px;
+      font-weight: 800;
+    }
+
+    .package-note {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
     }
 
     .form-grid {
@@ -116,10 +173,10 @@
       margin-bottom: 7px;
     }
 
-    input, textarea {
+    input:not([type="radio"]), textarea {
       display: block;
       width: 100%;
-      border: 1px solid #cbd7cf;
+      border: 1px solid #cbd9ea;
       border-radius: 9px;
       padding: 12px 13px;
       font: inherit;
@@ -129,7 +186,7 @@
     }
 
     input:focus, textarea:focus {
-      outline: 2px solid rgba(23, 107, 80, 0.18);
+      outline: 2px solid rgba(23, 105, 210, 0.18);
       border-color: var(--primary);
     }
 
@@ -147,17 +204,17 @@
       font: inherit;
       font-weight: 700;
       cursor: pointer;
-      transition: background 0.2s, opacity 0.2s;
+      transition: background .2s, opacity .2s;
     }
 
     button:disabled {
       cursor: wait;
-      opacity: 0.65;
+      opacity: .65;
     }
 
     .primary {
       background: var(--primary);
-      color: white;
+      color: #fff;
     }
 
     .primary:hover:not(:disabled) {
@@ -165,12 +222,12 @@
     }
 
     .secondary {
-      background: #edf3ef;
+      background: #eaf1fb;
       color: var(--text);
     }
 
     .secondary:hover:not(:disabled) {
-      background: #dfe9e2;
+      background: #dbe8fa;
     }
 
     .generate-btn {
@@ -222,11 +279,16 @@
 
     #status.success {
       display: block;
-      background: #e9f7ef;
-      color: #176b50;
+      background: #eaf3ff;
+      color: #1453a6;
     }
 
     .hidden { display: none !important; }
+
+    .small-note {
+      font-size: 12px;
+      color: var(--muted);
+    }
 
     footer {
       padding: 28px 18px;
@@ -235,8 +297,10 @@
       font-size: 13px;
     }
 
+    footer span { color: var(--primary); font-weight: 700; }
+
     @media (max-width: 620px) {
-      .form-grid { grid-template-columns: 1fr; }
+      .form-grid, .packages { grid-template-columns: 1fr; }
       .field.full { grid-column: auto; }
       .result-toolbar button { flex: 1 1 100%; }
       main { margin-top: 28px; }
@@ -255,14 +319,52 @@
 
   <main>
     <section class="hero">
-      <h1>Your next opportunity starts here.</h1>
+      <h1>Your next opportunity <span>starts here.</span></h1>
       <p>
         Create a professional CV tailored to the job you want.
-        Enter your details and the job description to get started.
+        Enter your details and prepare for your next opportunity.
       </p>
     </section>
 
-    <section class="card">
+    <section class="card" id="purchaseSection">
+      <h2>Choose your package</h2>
+      <p class="card-intro">
+        Choose the package that works for you.
+      </p>
+
+      <div class="packages">
+        <label class="package">
+          <input type="radio" name="packageId" value="single" checked>
+          <span class="package-name">Starter · 1 CV</span>
+          <span class="price">$1.20</span>
+          <span class="package-note">One tailored CV</span>
+        </label>
+
+        <label class="package">
+          <input type="radio" name="packageId" value="three">
+          <span class="package-name">Standard · 4 CVs</span>
+          <span class="price">$3.00</span>
+          <span class="package-note">For multiple applications</span>
+        </label>
+
+        <label class="package">
+          <input type="radio" name="packageId" value="five">
+          <span class="package-name">Premium · 6 CVs</span>
+          <span class="price">$5.00</span>
+          <span class="package-note">For frequent applicants</span>
+        </label>
+      </div>
+
+      <button class="primary generate-btn" id="payBtn" type="button">
+        Continue to Paynow
+      </button>
+
+      <p class="small-note">
+        You will be redirected to Paynow to complete your payment.
+      </p>
+    </section>
+
+    <section class="card" id="createSection">
       <h2>Create your CV</h2>
       <p class="card-intro">
         Provide accurate information so your CV represents your real experience.
@@ -337,7 +439,7 @@
     <section class="card hidden" id="resultSection">
       <h2>Your tailored CV</h2>
       <p class="card-intro">
-        Review your CV and make any necessary corrections before downloading.
+        Review your CV and correct any details before downloading.
       </p>
 
       <div class="result-toolbar">
@@ -352,15 +454,15 @@
   </main>
 
   <footer>
-    Vaka-CV · Build Your CV. Build Your Future.
+    <span>Vaka-CV</span> · Build Your CV. Build Your Future.
   </footer>
 
-  <!-- PDF library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
 
   <script>
     const form = document.getElementById("cvForm");
     const generateBtn = document.getElementById("generateBtn");
+    const payBtn = document.getElementById("payBtn");
     const resultSection = document.getElementById("resultSection");
     const cvResult = document.getElementById("cvResult");
     const statusBox = document.getElementById("status");
@@ -375,7 +477,7 @@
     }
 
     function safeFilename(value) {
-      const cleaned = value
+      const cleaned = String(value || "")
         .normalize("NFKD")
         .replace(/[^a-zA-Z0-9_-]+/g, "_")
         .replace(/^_+|_+$/g, "");
@@ -383,7 +485,115 @@
       return cleaned || "Vaka-CV";
     }
 
-    // Generate the CV through your existing backend.
+    // Start Paynow checkout.
+    payBtn.addEventListener("click", async function () {
+      const selected = document.querySelector(
+        'input[name="packageId"]:checked'
+      );
+
+      if (!selected) {
+        showStatus("Please choose a package first.", "error");
+        return;
+      }
+
+      payBtn.disabled = true;
+      payBtn.textContent = "Connecting to Paynow...";
+      showStatus("Preparing your checkout. Please wait.", "info");
+
+      try {
+        const response = await fetch("/api/create-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ packageId: selected.value })
+        });
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok || !result.checkoutUrl || !result.reference) {
+          throw new Error(
+            result.error || "Could not start checkout. Please try again."
+          );
+        }
+
+        sessionStorage.setItem("vakaPaymentReference", result.reference);
+        window.location.href = result.checkoutUrl;
+
+      } catch (error) {
+        console.error("Checkout error:", error);
+        showStatus(
+          error.message || "Could not connect to Paynow. Please try again.",
+          "error"
+        );
+
+        payBtn.disabled = false;
+        payBtn.textContent = "Continue to Paynow";
+      }
+    });
+
+    // Check payment status when Paynow returns to the website.
+    async function checkPaymentReturn() {
+      const params = new URLSearchParams(window.location.search);
+
+      if (params.get("payment") !== "return") return;
+
+      const reference = sessionStorage.getItem("vakaPaymentReference");
+
+      if (!reference) {
+        showStatus(
+          "We could not find your checkout reference. Contact support before paying again.",
+          "error"
+        );
+        return;
+      }
+
+      showStatus("Checking your payment. Please wait.", "info");
+
+      for (let attempt = 0; attempt < 8; attempt++) {
+        try {
+          const response = await fetch(
+            "/api/payment-status?reference=" + encodeURIComponent(reference),
+            { cache: "no-store" }
+          );
+
+          const result = await response.json().catch(() => ({}));
+
+          if (response.ok && result.status === "paid") {
+            showStatus(
+              "Payment confirmed. CV credits must be enabled by the payment backend before paid CV generation is available.",
+              "success"
+            );
+            break;
+          }
+
+          if (
+            response.ok &&
+            ["cancelled", "failed"].includes(result.status)
+          ) {
+            showStatus(
+              "This payment was not completed. You can try checkout again.",
+              "error"
+            );
+            break;
+          }
+
+        } catch (error) {
+          console.error("Payment status check failed:", error);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 2500));
+      }
+
+      if (statusBox.className === "info") {
+        showStatus(
+          "Payment is not confirmed yet. If you paid, wait a moment and check again.",
+          "info"
+        );
+      }
+
+      window.history.replaceState({}, document.title, "/");
+    }
+
+    // Generate a CV through the existing Gemini API.
     form.addEventListener("submit", async function (event) {
       event.preventDefault();
 
@@ -413,7 +623,9 @@
         const result = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          throw new Error(result.error || "CV generation failed. Please try again.");
+          throw new Error(
+            result.error || "CV generation failed. Please try again."
+          );
         }
 
         if (!result.cv || typeof result.cv !== "string") {
@@ -423,18 +635,26 @@
         cvResult.value = result.cv;
         resultSection.classList.remove("hidden");
         showStatus("Your CV has been generated successfully.", "success");
-        resultSection.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        resultSection.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
 
       } catch (error) {
         console.error("CV generation error:", error);
-        showStatus(error.message || "Something went wrong. Please try again.", "error");
+        showStatus(
+          error.message || "Something went wrong. Please try again.",
+          "error"
+        );
+
       } finally {
         generateBtn.disabled = false;
         generateBtn.textContent = "Generate My CV";
       }
     });
 
-    // Copy CV to clipboard.
+    // Copy CV.
     document.getElementById("copyBtn").addEventListener("click", async function () {
       const text = getCVText();
 
@@ -446,14 +666,17 @@
       try {
         await navigator.clipboard.writeText(text);
         showStatus("CV copied to your clipboard.", "success");
-      } catch (error) {
+
+      } catch {
         cvResult.focus();
         cvResult.select();
 
         try {
           const copied = document.execCommand("copy");
           showStatus(
-            copied ? "CV copied to your clipboard." : "Select the CV text and copy it manually.",
+            copied
+              ? "CV copied to your clipboard."
+              : "Select the CV text and copy it manually.",
             copied ? "success" : "error"
           );
         } catch {
@@ -462,7 +685,7 @@
       }
     });
 
-    // Download CV as a plain text file.
+    // Download as TXT.
     document.getElementById("textBtn").addEventListener("click", function () {
       const text = getCVText();
 
@@ -470,10 +693,6 @@
         showStatus("Generate a CV before downloading it.", "error");
         return;
       }
-
-      const filename = safeFilename(
-        document.getElementById("fullName").value
-      );
 
       const blob = new Blob(["\uFEFF", text], {
         type: "text/plain;charset=utf-8"
@@ -483,7 +702,9 @@
       const link = document.createElement("a");
 
       link.href = url;
-      link.download = filename + "_CV.txt";
+      link.download =
+        safeFilename(document.getElementById("fullName").value) + "_CV.txt";
+
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -492,7 +713,7 @@
       showStatus("Your TXT download has started.", "success");
     });
 
-    // Download CV as a PDF.
+    // Download as PDF.
     document.getElementById("pdfBtn").addEventListener("click", function () {
       const text = getCVText();
 
@@ -520,10 +741,8 @@
         const margin = 18;
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
-        const maxWidth = pageWidth - margin * 2;
+        const lines = pdf.splitTextToSize(text, pageWidth - margin * 2);
         const lineHeight = 5.5;
-
-        const lines = pdf.splitTextToSize(text, maxWidth);
         let y = margin;
 
         pdf.setFont("helvetica", "normal");
@@ -539,21 +758,22 @@
           y += lineHeight;
         }
 
-        const filename = safeFilename(
-          document.getElementById("fullName").value
+        pdf.save(
+          safeFilename(document.getElementById("fullName").value) + "_CV.pdf"
         );
 
-        pdf.save(filename + "_CV.pdf");
         showStatus("Your PDF download has started.", "success");
 
       } catch (error) {
         console.error("PDF download error:", error);
         showStatus(
-          "PDF creation failed. Try downloading the TXT file and check the browser console for details.",
+          "PDF creation failed. Try downloading the TXT file.",
           "error"
         );
       }
     });
+
+    checkPaymentReturn();
   </script>
 </body>
 </html>
