@@ -3,9 +3,9 @@ import { Paynow } from "paynow";
 import { createClient } from "@supabase/supabase-js";
 
 const packages = {
-  single: { amount: 1.5, cvs: 1, name: "1 CV" },
-  three: { amount: 3.5, cvs: 3, name: "3 CVs" },
-  five: { amount: 5.0, cvs: 5, name: "5 CVs" }
+  single: { amount: 1.20, cvs: 1, name: "1 CV" },
+  three: { amount: 3.00, cvs: 4, name: "4 CVs" },
+  five: { amount: 5.00, cvs: 6, name: "6 CVs" }
 };
 
 export default async function handler(req, res) {
@@ -21,6 +21,18 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Invalid CV package" });
     }
 
+    if (
+      !process.env.PAYNOW_INTEGRATION_ID ||
+      !process.env.PAYNOW_INTEGRATION_KEY ||
+      !process.env.SUPABASE_URL ||
+      !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      console.error("Required payment environment variables are missing.");
+      return res.status(500).json({
+        error: "Payment service is not configured."
+      });
+    }
+
     const paynow = new Paynow(
       process.env.PAYNOW_INTEGRATION_ID,
       process.env.PAYNOW_INTEGRATION_KEY
@@ -32,6 +44,7 @@ export default async function handler(req, res) {
     );
 
     const baseUrl = "https://vaka-cv.vercel.app";
+
     paynow.returnUrl = `${baseUrl}/?payment=return`;
     paynow.resultUrl = `${baseUrl}/api/payment-result`;
 
@@ -51,7 +64,7 @@ export default async function handler(req, res) {
     if (insertError) {
       console.error("Supabase insert failed:", insertError.message);
       return res.status(500).json({
-        error: "Could not create payment record"
+        error: "Could not create payment record."
       });
     }
 
@@ -60,13 +73,18 @@ export default async function handler(req, res) {
 
     const response = await paynow.send(payment);
 
-    if (!response.success || !response.redirectUrl || !response.pollUrl) {
+    if (
+      !response.success ||
+      !response.redirectUrl ||
+      !response.pollUrl
+    ) {
       await supabase
         .from("payments")
         .update({ status: "failed" })
         .eq("reference", reference);
 
       console.error("Paynow initiation failed:", response.error);
+
       return res.status(502).json({
         error: "Could not start payment. Please try again."
       });
@@ -78,7 +96,11 @@ export default async function handler(req, res) {
       .eq("reference", reference);
 
     if (updateError) {
-      console.error("Could not save Paynow poll URL:", updateError.message);
+      console.error(
+        "Could not save Paynow poll URL:",
+        updateError.message
+      );
+
       return res.status(500).json({
         error: "Could not save payment details. Please contact support before retrying."
       });
@@ -92,6 +114,7 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error("Payment setup error:", error.message);
+
     return res.status(500).json({
       error: "Something went wrong starting your payment."
     });
