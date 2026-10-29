@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -519,13 +518,21 @@
 
         const result = await response.json().catch(() => ({}));
 
-        if (!response.ok || !result.checkoutUrl || !result.reference) {
+        if (
+          !response.ok ||
+          !result.checkoutUrl ||
+          !result.reference ||
+          !result.accessToken
+        ) {
           throw new Error(
             result.error || "Could not start checkout. Please try again."
           );
         }
 
+        // Save the payment reference and access token for this browser session.
         sessionStorage.setItem("vakaPaymentReference", result.reference);
+        sessionStorage.setItem("vakaAccessToken", result.accessToken);
+
         window.location.href = result.checkoutUrl;
 
       } catch (error) {
@@ -569,7 +576,7 @@
 
           if (response.ok && result.status === "paid") {
             showStatus(
-              "Payment confirmed. CV credit access is not yet connected. Please do not make another payment.",
+              "Payment confirmed. You can now generate your CV.",
               "success"
             );
             break;
@@ -585,16 +592,19 @@
             );
             break;
           }
+
         } catch (error) {
           console.error("Payment status check failed:", error);
         }
 
-        await new Promise(resolve => setTimeout(resolve, 2500));
+        if (attempt < 7) {
+          await new Promise(resolve => setTimeout(resolve, 2500));
+        }
       }
 
       if (statusBox.className === "info") {
         showStatus(
-          "Payment is not confirmed yet. If you paid, wait a moment and check again.",
+          "Payment is not confirmed yet. If you paid, wait a moment before trying again.",
           "info"
         );
       }
@@ -602,9 +612,7 @@
       window.history.replaceState({}, document.title, "/");
     }
 
-    // Generate a CV through the existing Gemini API.
-    // IMPORTANT: Payment-credit authorization still needs to be implemented
-    // securely on the server before accepting real customers.
+    // Generate a CV through the secure, payment-protected API.
     form.addEventListener("submit", async function (event) {
       event.preventDefault();
 
@@ -613,6 +621,7 @@
       showStatus("Preparing your tailored CV. Please wait.", "info");
 
       const data = {
+        accessToken: sessionStorage.getItem("vakaAccessToken"),
         fullName: document.getElementById("fullName").value.trim(),
         email: document.getElementById("email").value.trim(),
         phone: document.getElementById("phone").value.trim(),
@@ -625,9 +634,17 @@
       };
 
       try {
+        if (!data.accessToken) {
+          throw new Error(
+            "Payment access was not found. Please complete checkout first."
+          );
+        }
+
         const response = await fetch("/api/generate", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify(data)
         });
 
@@ -640,7 +657,9 @@
         }
 
         if (!result.cv || typeof result.cv !== "string") {
-          throw new Error("The server did not return a CV. Please try again.");
+          throw new Error(
+            "The server did not return a CV. Please try again."
+          );
         }
 
         cvResult.value = result.cv;
