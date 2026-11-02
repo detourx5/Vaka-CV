@@ -1,22 +1,33 @@
 
 import { createClient } from "@supabase/supabase-js";
+import { createHash } from "node:crypto";
+
+function hashToken(token) {
+  return createHash("sha256").update(token).digest("hex");
+}
 
 export default async function handler(req, res) {
-  if (req.method !== "GET") {
-    res.setHeader("Allow", "GET");
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
     return res.status(405).json({
-      error: "Method not allowed"
+      error: "Method not allowed."
     });
   }
 
-  const reference =
-    typeof req.query?.reference === "string"
-      ? req.query.reference.trim()
-      : "";
+  const {
+    reference,
+    accessToken
+  } = req.body || {};
 
-  if (!reference || reference.length > 100) {
+  if (
+    typeof reference !== "string" ||
+    !reference.trim() ||
+    reference.length > 100 ||
+    typeof accessToken !== "string" ||
+    !/^[a-f0-9]{64}$/i.test(accessToken)
+  ) {
     return res.status(400).json({
-      error: "A valid payment reference is required."
+      error: "Valid payment access details are required."
     });
   }
 
@@ -37,8 +48,9 @@ export default async function handler(req, res) {
 
     const { data: payment, error } = await supabase
       .from("payments")
-      .select("reference, status, amount, cv_count")
-      .eq("reference", reference)
+      .select("reference, status, amount, cv_count, used_cvs")
+      .eq("reference", reference.trim())
+      .eq("access_token_hash", hashToken(accessToken))
       .maybeSingle();
 
     if (error) {
@@ -51,17 +63,18 @@ export default async function handler(req, res) {
 
     if (!payment) {
       return res.status(404).json({
-        error: "Payment not found."
+        error: "Payment not found or access denied."
       });
     }
 
-    // This endpoint reports status only.
-    // It does not grant CV credits or authorize CV generation.
     return res.status(200).json({
       reference: payment.reference,
       status: payment.status,
-      amount: payment.amount
+      amount: payment.amount,
+      cvCount: payment.cv_count,
+      usedCvs: payment.used_cvs
     });
+
   } catch (error) {
     console.error("Payment status error:", error.message);
 
