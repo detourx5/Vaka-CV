@@ -1,7 +1,7 @@
 
 import { GoogleGenAI } from "@google/genai";
 import { createClient } from "@supabase/supabase-js";
-import { createHash } from "node:crypto";
+import { randomBytes, createHash } from "node:crypto";
 
 function hashToken(token) {
   return createHash("sha256").update(token).digest("hex");
@@ -19,13 +19,8 @@ export default async function handler(req, res) {
     });
   }
 
-  let supabase;
-  let paymentReference;
-  let creditReserved = false;
-
   try {
     const {
-      accessToken,
       fullName,
       email = "",
       phone = "",
@@ -36,15 +31,6 @@ export default async function handler(req, res) {
       skills = "",
       jobDescription
     } = req.body || {};
-
-    if (
-      typeof accessToken !== "string" ||
-      !/^[a-f0-9]{64}$/i.test(accessToken)
-    ) {
-      return res.status(401).json({
-        error: "Payment access is missing. Please complete checkout first."
-      });
-    }
 
     if (
       !validText(fullName, 150) ||
@@ -77,61 +63,10 @@ export default async function handler(req, res) {
       });
     }
 
-    supabase = createClient(
+    const supabase = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
-
-    // Match the private browser token to its payment record.
-    const tokenHash = hashToken(accessToken);
-
-    const { data: payment, error: lookupError } = await supabase
-      .from("payments")
-      .select("reference, status, cv_count, used_cvs")
-      .eq("access_token_hash", tokenHash)
-      .maybeSingle();
-
-    if (lookupError) {
-      console.error("Payment lookup failed:", lookupError.message);
-      return res.status(500).json({
-        error: "Could not verify your payment. Please try again."
-      });
-    }
-
-    if (!payment || payment.status !== "paid") {
-      return res.status(402).json({
-        error: "Payment has not been confirmed. Please check your payment status."
-      });
-    }
-
-    if (payment.used_cvs >= payment.cv_count) {
-      return res.status(403).json({
-        error: "You have used all your CV credits. Please purchase another package."
-      });
-    }
-
-    paymentReference = payment.reference;
-
-    // Reserve one credit atomically to prevent exceeding the package limit.
-    const { data: reservation, error: reservationError } =
-      await supabase.rpc("use_cv_credit", {
-        p_reference: paymentReference
-      });
-
-    if (reservationError) {
-      console.error("Credit reservation failed:", reservationError.message);
-      return res.status(500).json({
-        error: "Could not reserve a CV credit. Please try again."
-      });
-    }
-
-    if (!reservation || reservation.length === 0) {
-      return res.status(403).json({
-        error: "No unused CV credits remain. Please purchase another package."
-      });
-    }
-
-    creditReserved = true;
 
     const ai = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY
@@ -170,7 +105,6 @@ Instructions:
 - Improve wording without inventing qualifications, employers, dates or achievements.
 - Do not invent missing contact details or personal information.
 - If information is missing, do not fabricate it.
-- Make the CV easy to copy into a document.
 - Return the CV only, without commentary before or after it.
 `;
 
@@ -182,62 +116,66 @@ Instructions:
         contents: prompt
       });
     } catch (generationError) {
-      // Refund the reserved credit if Gemini fails.
-      const { error: refundError } = await supabase.rpc(
-        "refund_cv_credit",
-        { p_reference: paymentReference }
+      console.error(
+        "Gemini generation failed:",
+        generationError.message
       );
 
-      if (refundError) {
-        console.error("Credit refund failed:", refundError.message);
-      } else {
-        creditReserved = false;
-      }
-
-      console.error("Gemini generation failed:", generationError.message);
-
       return res.status(502).json({
-        error: "CV generation failed. If your credit was not restored, contact support before paying again."
+        error: "CV generation failed. Please try again."
       });
     }
 
     const cv = response?.text?.trim();
 
     if (!cv) {
-      const { error: refundError } = await supabase.rpc(
-        "refund_cv_credit",
-        { p_reference: paymentReference }
-      );
-
-      if (refundError) {
-        console.error("Credit refund failed:", refundError.message);
-      } else {
-        creditReserved = false;
-      }
-
       return res.status(502).json({
         error: "No CV was returned. Please try again."
       });
     }
 
-    return res.status(200).json({
-      cv,
-      message: "CV generated successfully."
-    });
-  } catch (error) {
-    console.error("CV generation endpoint failed:", error.message);
+    // Create a private access token for this CV.
+    const draftToken = randomBytes(32).toString("hex");
 
-    // Attempt to restore the reserved credit after an unexpected error.
-    if (supabase && paymentReference && creditReserved) {
-      const { error: refundError } = await supabase.rpc(
-        "refund_cv_credit",
-        { p_reference: paymentReference }
+    const draftTokenHash = hashToken(draftToken);
+
+    // Store the complete CV privately in Supabase.
+    const { data: draft, error: insertError } = await supabase
+      .from("cv_drafts")
+      .insert({
+        draft_token_hash: draftTokenHash,
+        full_name: fullName.trim(),
+        cv_text: cv,
+        status: "locked"
+      })
+      .select("id")
+      .single();
+
+    if (insertError) {
+      console.error(
+        "CV draft storage failed:",
+        insertError.message
       );
 
-      if (refundError) {
-        console.error("Credit refund failed:", refundError.message);
-      }
+      return res.status(500).json({
+        error: "Could not securely save your CV. Please try again."
+      });
     }
+
+    // Do not return the complete CV before payment.
+    return res.status(200).json({
+      success: true,
+      draftId: draft.id,
+      draftToken,
+      status: "locked",
+      message: "Your CV has been generated successfully."
+    });
+
+  } catch (error) {
+    console.error(
+      "CV generation endpoint failed:",
+      error.message
+    );
 
     return res.status(500).json({
       error: "Something went wrong generating your CV."
