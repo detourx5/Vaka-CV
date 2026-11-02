@@ -1,7 +1,7 @@
 
 import { Paynow } from "paynow";
 import { createClient } from "@supabase/supabase-js";
-import { randomBytes, createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 
 const packages = {
   single: { amount: 1.20, cvs: 1, name: "1 CV" },
@@ -9,6 +9,10 @@ const packages = {
   three: { amount: 3.00, cvs: 4, name: "4 CVs" },
   five: { amount: 5.00, cvs: 6, name: "6 CVs" }
 };
+
+function hashToken(token) {
+  return createHash("sha256").update(token).digest("hex");
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -19,12 +23,24 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { packageId } = req.body || {};
+    const { packageId, draftId, draftToken } = req.body || {};
+
     const selected = packages[packageId];
 
     if (!selected) {
       return res.status(400).json({
-        error: "Invalid CV package"
+        error: "Invalid CV package."
+      });
+    }
+
+    if (
+      typeof draftId !== "string" ||
+      !/^[0-9a-f-]{36}$/i.test(draftId) ||
+      typeof draftToken !== "string" ||
+      !/^[a-f0-9]{64}$/i.test(draftToken)
+    ) {
+      return res.status(400).json({
+        error: "Your CV session is invalid. Please generate your CV again."
       });
     }
 
@@ -41,14 +57,36 @@ export default async function handler(req, res) {
       });
     }
 
-    const paynow = new Paynow(
-      process.env.PAYNOW_INTEGRATION_ID,
-      process.env.PAYNOW_INTEGRATION_KEY
-    );
-
     const supabase = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    // Confirm ownership of the generated CV draft.
+    const { data: draft, error: draftError } = await supabase
+      .from("cv_drafts")
+      .select("id, status")
+      .eq("id", draftId)
+      .eq("draft_token_hash", hashToken(draftToken))
+      .maybeSingle();
+
+    if (draftError) {
+      console.error("CV draft lookup failed:", draftError.message);
+
+      return res.status(500).json({
+        error: "Could not verify your CV."
+      });
+    }
+
+    if (!draft || draft.status !== "locked") {
+      return res.status(404).json({
+        error: "CV draft not found or already unlocked."
+      });
+    }
+
+    const paynow = new Paynow(
+      process.env.PAYNOW_INTEGRATION_ID,
+      process.env.PAYNOW_INTEGRATION_KEY
     );
 
     const baseUrl = "https://vaka-cv.vercel.app";
@@ -59,13 +97,11 @@ export default async function handler(req, res) {
     const reference =
       `VAKA-${Date.now()}-${randomBytes(8).toString("hex")}`;
 
-    // Generate a private token and store only its SHA-256 hash.
     const accessToken = randomBytes(32).toString("hex");
 
-    const accessTokenHash = createHash("sha256")
-      .update(accessToken)
-      .digest("hex");
+    const accessTokenHash = hashToken(accessToken);
 
+    // Create the payment and link it to this CV draft.
     const { error: insertError } = await supabase
       .from("payments")
       .insert({
@@ -75,6 +111,7 @@ export default async function handler(req, res) {
         cv_count: selected.cvs,
         used_cvs: 0,
         access_token_hash: accessTokenHash,
+        draft_id: draftId,
         status: "pending"
       });
 
@@ -87,6 +124,7 @@ export default async function handler(req, res) {
     }
 
     const payment = paynow.createPayment(reference);
+
     payment.add(selected.name, selected.amount);
 
     const response = await paynow.send(payment);
@@ -115,7 +153,7 @@ export default async function handler(req, res) {
       console.error("Saving Paynow details failed:", updateError.message);
 
       return res.status(500).json({
-        error: "Could not save payment details. Please contact support before retrying."
+        error: "Could not save payment details."
       });
     }
 
@@ -126,6 +164,7 @@ export default async function handler(req, res) {
       cvs: selected.cvs,
       accessToken
     });
+
   } catch (error) {
     console.error("Payment setup failed:", error.message);
 
