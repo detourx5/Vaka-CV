@@ -11,6 +11,80 @@ function validText(value, maxLength) {
   return typeof value === "string" && value.length <= maxLength;
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isTemporaryError(error) {
+  const status = Number(
+    error?.status ||
+    error?.statusCode ||
+    error?.code
+  );
+
+  const message = String(error?.message || "").toLowerCase();
+
+  return (
+    [408, 429, 500, 502, 503, 504].includes(status) ||
+    message.includes("high demand") ||
+    message.includes("unavailable") ||
+    message.includes("temporarily") ||
+    message.includes("overloaded") ||
+    message.includes("rate limit")
+  );
+}
+
+async function generateWithFallback(ai, prompt) {
+  const models = [
+    "gemini-3.8-flash",
+    "gemini-3.6-flash"
+  ];
+
+  let lastError;
+
+  for (const model of models) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        console.log(`Trying ${model}, attempt ${attempt}`);
+
+        const response = await ai.models.generateContent({
+          model,
+          contents: prompt
+        });
+
+        const cv = response?.text?.trim();
+
+        if (!cv) {
+          throw new Error("Gemini returned an empty CV.");
+        }
+
+        console.log(`CV successfully generated using ${model}`);
+
+        return cv;
+
+      } catch (error) {
+        lastError = error;
+
+        console.error(
+          `Gemini error on ${model}, attempt ${attempt}:`,
+          error?.status || error?.statusCode || error?.code || "",
+          error?.message || "Unknown error"
+        );
+
+        if (!isTemporaryError(error)) {
+          throw error;
+        }
+
+        if (attempt < 2) {
+          await sleep(1500);
+        }
+      }
+    }
+  }
+
+  throw lastError || new Error("All Gemini models failed.");
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -57,7 +131,7 @@ export default async function handler(req, res) {
       "SUPABASE_SERVICE_ROLE_KEY"
     ];
 
-    if (requiredEnv.some((key) => !process.env[key])) {
+    if (requiredEnv.some(key => !process.env[key])) {
       return res.status(500).json({
         error: "The CV generation service is not configured."
       });
@@ -78,6 +152,7 @@ You are a professional CV writer and recruitment specialist.
 Create a professional, ATS-friendly CV tailored to the job description.
 
 Candidate information:
+
 Full name: ${fullName.trim()}
 Email: ${email}
 Phone: ${phone}
@@ -108,38 +183,27 @@ Instructions:
 - Return the CV only, without commentary before or after it.
 `;
 
-    let response;
+    let cv;
 
     try {
-      response = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
-        contents: prompt
-      });
+      cv = await generateWithFallback(ai, prompt);
+
     } catch (generationError) {
       console.error(
-        "Gemini generation failed:",
-        generationError.message
+        "All Gemini generation attempts failed:",
+        generationError?.message || generationError
       );
 
-      return res.status(502).json({
-        error: "CV generation failed. Please try again."
+      return res.status(503).json({
+        error: isTemporaryError(generationError)
+          ? "Our AI service is temporarily busy. Please wait a moment and try again."
+          : "We could not generate your CV. Please check your details and try again."
       });
     }
 
-    const cv = response?.text?.trim();
-
-    if (!cv) {
-      return res.status(502).json({
-        error: "No CV was returned. Please try again."
-      });
-    }
-
-    // Create a private access token for this CV.
     const draftToken = randomBytes(32).toString("hex");
-
     const draftTokenHash = hashToken(draftToken);
 
-    // Store the complete CV privately in Supabase.
     const { data: draft, error: insertError } = await supabase
       .from("cv_drafts")
       .insert({
@@ -162,7 +226,6 @@ Instructions:
       });
     }
 
-    // Do not return the complete CV before payment.
     return res.status(200).json({
       success: true,
       draftId: draft.id,
@@ -174,7 +237,7 @@ Instructions:
   } catch (error) {
     console.error(
       "CV generation endpoint failed:",
-      error.message
+      error?.message || error
     );
 
     return res.status(500).json({
