@@ -2,6 +2,12 @@
 import { Paynow } from "paynow";
 import { createClient } from "@supabase/supabase-js";
 
+const acceptedStatuses = [
+  "paid",
+  "awaiting delivery",
+  "delivered"
+];
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -18,12 +24,6 @@ export default async function handler(req, res) {
 
     const receivedAmount = Number(body.amount);
     const callbackStatus = String(body.status || "").toLowerCase();
-
-    const acceptedStatuses = [
-      "paid",
-      "awaiting delivery",
-      "delivered"
-    ];
 
     if (!reference || !body.hash || !body.pollurl) {
       return res.status(400).send("Missing payment details");
@@ -46,14 +46,12 @@ export default async function handler(req, res) {
       process.env.PAYNOW_INTEGRATION_KEY
     );
 
-    // Verify the authenticity of Paynow's callback.
     if (!paynow.verifyHash(body)) {
       console.error("Paynow callback hash verification failed.");
       return res.status(400).send("Invalid payment hash");
     }
 
     if (!acceptedStatuses.includes(callbackStatus)) {
-      console.log("Paynow callback is not a successful payment:", callbackStatus);
       return res.status(200).send("Payment not confirmed");
     }
 
@@ -66,14 +64,14 @@ export default async function handler(req, res) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    const { data: record, error } = await supabase
+    const { data: record, error: lookupError } = await supabase
       .from("payments")
-      .select("reference, amount, status, poll_url")
+      .select("reference, amount, status, poll_url, draft_id")
       .eq("reference", reference)
       .maybeSingle();
 
-    if (error) {
-      console.error("Payment lookup failed:", error.message);
+    if (lookupError) {
+      console.error("Payment lookup failed:", lookupError.message);
       return res.status(500).send("Could not check payment");
     }
 
@@ -82,6 +80,19 @@ export default async function handler(req, res) {
     }
 
     if (record.status === "paid") {
+      // Ensure a previously confirmed payment has an unlocked draft.
+      if (record.draft_id) {
+        const { error: unlockError } = await supabase
+          .from("cv_drafts")
+          .update({ status: "unlocked" })
+          .eq("id", record.draft_id);
+
+        if (unlockError) {
+          console.error("CV unlock recovery failed:", unlockError.message);
+          return res.status(500).send("Could not unlock CV");
+        }
+      }
+
       return res.status(200).send("Payment already verified");
     }
 
@@ -89,7 +100,6 @@ export default async function handler(req, res) {
       return res.status(200).send("Payment is not pending");
     }
 
-    // Check that the callback amount matches our database.
     if (Math.abs(receivedAmount - Number(record.amount)) > 0.001) {
       console.error("Payment amount mismatch.");
       return res.status(400).send("Payment amount mismatch");
@@ -100,10 +110,9 @@ export default async function handler(req, res) {
       return res.status(500).send("Payment polling URL is missing");
     }
 
-    // Independently verify the transaction with Paynow.
+    // Independently confirm payment with Paynow.
     const polledPayment = await paynow.pollTransaction(record.poll_url);
 
-    // SDK 2.2.2 exposes the returned status as a string.
     const verifiedStatus = String(
       polledPayment?.status || ""
     ).toLowerCase();
@@ -114,7 +123,7 @@ export default async function handler(req, res) {
       return res.status(200).send("Payment not confirmed by Paynow");
     }
 
-    // Update only a pending payment.
+    // Mark the payment as paid only if it is still pending.
     const { data: updated, error: updateError } = await supabase
       .from("payments")
       .update({
@@ -134,9 +143,22 @@ export default async function handler(req, res) {
       return res.status(200).send("Payment already processed");
     }
 
+    // Unlock the CV associated with the verified payment.
+    if (record.draft_id) {
+      const { error: unlockError } = await supabase
+        .from("cv_drafts")
+        .update({ status: "unlocked" })
+        .eq("id", record.draft_id);
+
+      if (unlockError) {
+        console.error("CV unlock failed:", unlockError.message);
+        return res.status(500).send("Payment verified but CV unlock failed");
+      }
+    }
+
     console.log("Payment successfully verified:", reference);
 
-    return res.status(200).send("Payment verified");
+    return res.status(200).send("Payment verified and CV unlocked");
 
   } catch (error) {
     console.error("Payment verification error:", error.message);
